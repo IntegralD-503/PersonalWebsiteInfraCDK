@@ -16,4 +16,4 @@ const pipelineStack = new PipelineStack(app, 'PorkchopExpressPipelineStack',{
   s3BucketName: porkchopExpressStackBeta.assetsBucket.bucketName
 });
 
-// pipelineStack.deloyWebsiteStage(porkchopExpressStackBeta, "PorkchopExpressDeployWebsiteStage")
+pipelineStack.deloyWebsiteStage(porkchopExpressStackBeta, "PorkchopExpressDeployWebsiteStage")

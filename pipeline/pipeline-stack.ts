@@ -62,11 +62,11 @@ export class PipelineStack extends Stack {
                 project: new PipelineProject(this, 'CdkBuildProject', {
                   environment: {
                     buildImage: LinuxBuildImage.AMAZON_LINUX_2_4,
-                    environmentVariables: {
-                      S3_BUCKET: {
-                        value: props.s3BucketName
-                      }
-                    }
+                    // environmentVariables: {
+                    //   S3_BUCKET: {
+                    //     value: props.s3BucketName
+                    //   }
+                    // }
                   },
                   buildSpec: BuildSpec.fromSourceFilename('build-specs/cdk-build-spec.yml')
                 })
@@ -98,16 +98,16 @@ export class PipelineStack extends Stack {
           });
     }
 
-    // public deloyWebsiteStage(websiteStack: PorkchopExpressInfraCdkStack, stageName: string): IStage {
-    //   return this.pipeline.addStage({
-    //     stageName: stageName,
-    //     actions: [
-    //       new S3DeployAction({
-    //         actionName: 'PorkchopExpressWebsite_Deploy',
-    //         bucket: websiteStack.assetsBucket,
-    //         input: this.porkchopExpressBuildOutput
-    //       })
-    //     ]
-    //   })
-    // }
+    public deloyWebsiteStage(websiteStack: PorkchopExpressInfraCdkStack, stageName: string): IStage {
+      return this.pipeline.addStage({
+        stageName: stageName,
+        actions: [
+          new S3DeployAction({
+            actionName: 'PorkchopExpressWebsite_Deploy',
+            bucket: websiteStack.assetsBucket,
+            input: this.porkchopExpressBuildOutput
+          })
+        ]
+      })
+    }
 }
