@@ -5,13 +5,16 @@ import { CloudFormationCreateUpdateStackAction, CodeBuildAction, GitHubSourceAct
 import { Construct } from "constructs";
 import { PorkchopExpressInfraCdkStack } from "../lib/porkchop_express_infra_cdk-stack";
 
+interface PipelineStackProps extends StackProps {
+  readonly s3BucketName: string;
+}
 export class PipelineStack extends Stack {
     private readonly pipeline: Pipeline;
     private readonly cdkBuildOutput: Artifact;
     private readonly porkchopExpressSourceOutput: Artifact;
     private readonly porkchopExpressBuildOutput: Artifact;
 
-    constructor(scope: Construct, id: string, props?: StackProps) {
+    constructor(scope: Construct, id: string, props: PipelineStackProps) {
         super(scope, id, props);
 
 
@@ -58,7 +61,12 @@ export class PipelineStack extends Stack {
                 outputs: [ this.cdkBuildOutput ],
                 project: new PipelineProject(this, 'CdkBuildProject', {
                   environment: {
-                    buildImage: LinuxBuildImage.AMAZON_LINUX_2_4
+                    buildImage: LinuxBuildImage.AMAZON_LINUX_2_4,
+                    environmentVariables: {
+                      S3_BUCKET: {
+                        value: props.s3BucketName
+                      }
+                    }
                   },
                   buildSpec: BuildSpec.fromSourceFilename('build-specs/cdk-build-spec.yml')
                 })
@@ -90,16 +98,16 @@ export class PipelineStack extends Stack {
           });
     }
 
-    public deloyWebsiteStage(websiteStack: PorkchopExpressInfraCdkStack, stageName: string): IStage {
-      return this.pipeline.addStage({
-        stageName: stageName,
-        actions: [
-          new S3DeployAction({
-            actionName: 'PorkchopExpressWebsite_Deploy',
-            bucket: websiteStack.assetsBucket,
-            input: this.porkchopExpressBuildOutput
-          })
-        ]
-      })
-    }
+    // public deloyWebsiteStage(websiteStack: PorkchopExpressInfraCdkStack, stageName: string): IStage {
+    //   return this.pipeline.addStage({
+    //     stageName: stageName,
+    //     actions: [
+    //       new S3DeployAction({
+    //         actionName: 'PorkchopExpressWebsite_Deploy',
+    //         bucket: websiteStack.assetsBucket,
+    //         input: this.porkchopExpressBuildOutput
+    //       })
+    //     ]
+    //   })
+    // }
 }

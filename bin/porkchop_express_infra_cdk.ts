@@ -5,13 +5,15 @@ import { PorkchopExpressInfraCdkStack } from '../lib/porkchop_express_infra_cdk-
 import { PipelineStack } from '../pipeline/pipeline-stack';
 
 const app = new cdk.App();
-const pipelineStack = new PipelineStack(app, 'PorkchopExpressPipelineStack',{
-  env: { account: '784627546023', region: 'us-east-1' }
-});
 
 const porkchopExpressStackBeta = new PorkchopExpressInfraCdkStack(app, 'PorkchopExpressInfraStackBeta', {
   env: { account: '784627546023', region: 'us-east-1' },
   stageName: 'Beta'
 });
 
-pipelineStack.deloyWebsiteStage(porkchopExpressStackBeta, "PorkchopExpressDeployWebsiteStage")
+const pipelineStack = new PipelineStack(app, 'PorkchopExpressPipelineStack',{
+  env: { account: '784627546023', region: 'us-east-1' },
+  s3BucketName: porkchopExpressStackBeta.assetsBucket.bucketName
+});
+
+// pipelineStack.deloyWebsiteStage(porkchopExpressStackBeta, "PorkchopExpressDeployWebsiteStage")
