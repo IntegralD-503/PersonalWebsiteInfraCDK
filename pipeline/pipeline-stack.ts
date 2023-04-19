@@ -1,9 +1,10 @@
 import { SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { PipelineProject, LinuxBuildImage, BuildSpec } from "aws-cdk-lib/aws-codebuild";
 import { Artifact, IStage, Pipeline } from "aws-cdk-lib/aws-codepipeline";
-import { CloudFormationCreateUpdateStackAction, CodeBuildAction, GitHubSourceAction } from "aws-cdk-lib/aws-codepipeline-actions";
+import { CloudFormationCreateUpdateStackAction, CodeBuildAction, GitHubSourceAction, S3DeployAction } from "aws-cdk-lib/aws-codepipeline-actions";
 import { Construct } from "constructs";
 import { PorkchopExpressInfraCdkStack } from "../lib/porkchop_express_infra_cdk-stack";
+import { S3Stack } from "../lib/s3-stack";
 
 export class PipelineStack extends Stack {
     private readonly pipeline: Pipeline;
@@ -18,7 +19,7 @@ export class PipelineStack extends Stack {
         this.pipeline = new Pipeline(this, 'PorkchopExpressPipeline', {
             pipelineName: 'PorkchopExpressPipeline',
             crossAccountKeys: false,
-            restartExecutionOnUpdate: true
+            restartExecutionOnUpdate: true,
           });
       
           const cdkSourceOutput = new Artifact('PorkchopExpressInfraCDKOutput');
@@ -41,7 +42,7 @@ export class PipelineStack extends Stack {
                 branch: 'main',
                 actionName: 'PorkchopExpress_Source',
                 oauthToken: SecretValue.secretsManager('github-token'),
-                output: this.porkchopExpressSourceOutput
+                output: this.porkchopExpressSourceOutput, 
               })
             ]
           });
@@ -88,5 +89,18 @@ export class PipelineStack extends Stack {
               })
             ]
           });
+    }
+
+    public deloyWebsiteStage(websiteStack: PorkchopExpressInfraCdkStack, stageName: string): IStage {
+      return this.pipeline.addStage({
+        stageName: stageName,
+        actions: [
+          new S3DeployAction({
+            actionName: 'PorkchopExpressWebsite_Deploy',
+            bucket: websiteStack.assetsBucket,
+            input: this.porkchopExpressBuildOutput
+          })
+        ]
+      })
     }
 }

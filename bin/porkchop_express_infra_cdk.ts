@@ -6,12 +6,13 @@ import { PipelineStack } from '../pipeline/pipeline-stack';
 import { S3Stack } from '../lib/s3-stack';
 
 const app = new cdk.App();
-const pipelineStack = new PipelineStack(app, 'PorkchopExpressPipelineStack',{});
-
-const s3Stack = new S3Stack(app, 'porkchopExpressAssetS3Stack', {});
+const pipelineStack = new PipelineStack(app, 'PorkchopExpressPipelineStack',{
+  env: { account: '784627546023', region: 'us-east-1' }
+});
 
 const porkchopExpressStackBeta = new PorkchopExpressInfraCdkStack(app, 'PorkchopExpressInfraStackBeta', {
   env: { account: '784627546023', region: 'us-east-1' },
-  s3Bucket: s3Stack.porkchopExpressBucket,
   stageName: 'Beta'
 });
+
+pipelineStack.deloyWebsiteStage(porkchopExpressStackBeta, "PorkchopExpressDeployWebsiteStage")

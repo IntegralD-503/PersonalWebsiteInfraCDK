@@ -1,29 +1,27 @@
-import * as cdk from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { DnsValidatedCertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Distribution, HeadersFrameOption, HeadersReferrerPolicy, OriginAccessIdentity, ResponseHeadersPolicy, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
-import { Artifact } from 'aws-cdk-lib/aws-codepipeline';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { Bucket, BlockPublicAccess, BucketAccessControl, ObjectOwnership, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
-interface PorkchopExpressInfraCdkStackProps extends cdk.StackProps {
-  readonly s3Bucket: Bucket;
+interface PorkchopExpressInfraCdkStackProps extends StackProps {
   readonly stageName: string;
 }
 
-export class PorkchopExpressInfraCdkStack extends cdk.Stack {
+export class PorkchopExpressInfraCdkStack extends Stack {
+  public readonly assetsBucket: Bucket;
   
   constructor(scope: Construct, id: string, props: PorkchopExpressInfraCdkStackProps) {
     super(scope, id, props);
 
     const domainName = "pork-chop.express";
-
-    const assetsBucket = new Bucket(this, 'PorkchopExpressWebsiteBucket', {
+    this.assetsBucket = new Bucket(this, 'PorkchopExpressWebsiteBucket', {
       publicReadAccess: false,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: RemovalPolicy.RETAIN,
       accessControl: BucketAccessControl.PRIVATE,
       objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
       encryption: BucketEncryption.S3_MANAGED,
@@ -31,7 +29,7 @@ export class PorkchopExpressInfraCdkStack extends cdk.Stack {
 
     const cloudfrontOriginAccessIdentity = new OriginAccessIdentity(this, 'CloudFrontOriginAccessIdentity');
 
-    assetsBucket.grantRead(cloudfrontOriginAccessIdentity)
+    this.assetsBucket.grantRead(cloudfrontOriginAccessIdentity)
 
     const zone = HostedZone.fromLookup(this, 'HostedZone', { domainName: domainName });
 
@@ -51,7 +49,7 @@ export class PorkchopExpressInfraCdkStack extends cdk.Stack {
         },
         strictTransportSecurity: {
           override: true,
-          accessControlMaxAge: cdk.Duration.days(2 * 365),
+          accessControlMaxAge: Duration.days(2 * 365),
           includeSubdomains: true,
           preload: true
         },
@@ -79,7 +77,7 @@ export class PorkchopExpressInfraCdkStack extends cdk.Stack {
       domainNames: [domainName],
       defaultRootObject: 'index.html',
       defaultBehavior: {
-        origin: new S3Origin(assetsBucket, {
+        origin: new S3Origin(this.assetsBucket, {
           originAccessIdentity: cloudfrontOriginAccessIdentity
         }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
