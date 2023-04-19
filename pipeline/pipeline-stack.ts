@@ -4,7 +4,6 @@ import { Artifact, IStage, Pipeline } from "aws-cdk-lib/aws-codepipeline";
 import { CloudFormationCreateUpdateStackAction, CodeBuildAction, GitHubSourceAction, S3DeployAction } from "aws-cdk-lib/aws-codepipeline-actions";
 import { Construct } from "constructs";
 import { PorkchopExpressInfraCdkStack } from "../lib/porkchop_express_infra_cdk-stack";
-import { S3Stack } from "../lib/s3-stack";
 
 export class PipelineStack extends Stack {
     private readonly pipeline: Pipeline;
